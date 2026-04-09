@@ -21,25 +21,46 @@ Flow State transforms how you work by maintaining contexts. You declare what you
 
 Privacy is paramount—it can operate **entirely offline** via Ollama to guarantee your browsing data never leaves your device.
 
-## 🚀 Quick Start
+## 🚀 Complete Step-by-Step Guide
 
-1. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   pip install .
-   ```
+### 1. Installation & Environment Setup
+First, ensure you have Python 3.8+ installed. Then, clone the repository and install the requirements:
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-2. **Load Chrome Extension**
-   Open Chrome, navigate to `chrome://extensions/`, enable **Developer mode**, and click **Load unpacked**. Select the `flow-state-chrome-extension` folder located inside this repository.
+# Install Flow State locally
+pip install .
+```
 
-3. **Set Your Intention**
-   Drop into your terminal and launch the agent with your target goal:
-   ```bash
-   flow-state --goal "Research machine learning models for stock prediction"
-   ```
+### 2. Setting up the Chrome Extension
+The extension is the "eyes" of Flow State. It tracks your active tab and sends it to the server.
+1. Open Google Chrome and go to `chrome://extensions/`.
+2. Turn on **Developer mode** in the top right.
+3. Click **Load unpacked** and select the `flow-state-chrome-extension` folder from this project.
 
-4. **Dashboard View**
-   Open `http://localhost:3333/dashboard` to see your real-time logging, focus state visualization, and tracking statistics.
+### 3. Choosing your AI Brain (Ollama or AWS)
+Flow State needs an LLM to decide if you are drifting.
+- **Ollama (Recommended/Free):** Install [Ollama](https://ollama.com/), run `ollama run qwen2.5`, and you're ready. No keys!
+- **AWS Bedrock:** If you have an AWS account with Bedrock access, run `aws configure` to set your credentials.
+
+### 4. Running the System
+You can start the server and the monitoring agent in one command:
+```bash
+# Start monitoring with your current goal
+flow-state --goal "Complete my focus dashboard implementation"
+```
+*Note: This command automatically starts the internal event server on port 3333.*
+
+### 5. Using the Dashboard
+Once the system is running, open your browser to:
+**[http://localhost:3333/dashboard](http://localhost:3333/dashboard)**
+
+### 6. Managing Goals
+You can change your goal at any time without restarting the server:
+```bash
+flow-state-goal --set "Write the documentation for my new project"
+```
 
 ---
 
