@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include requirements.txt
+
+recursive-include docs *.md
+recursive-include assets *.png
+recursive-include flow-state-chrome-extension *
+recursive-include examples *.py
+recursive-include flow_state *.json *.html
+
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
