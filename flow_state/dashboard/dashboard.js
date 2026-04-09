@@ -1,5 +1,5 @@
 /* ============================================================
-   Flow State Dashboard — Monotonic Minimal Logic
+   Flow State Dashboard — Premium Interactive Logic
    ============================================================ */
 
 const STATE_INFO = {
@@ -29,27 +29,35 @@ function toggleTheme() {
     html.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
 
-    const moonIcon = document.querySelector('.moon-icon');
-    const sunIcon = document.querySelector('.sun-icon');
-    if (newTheme === 'light') {
-        moonIcon.style.display = 'none';
-        sunIcon.style.display = 'block';
-    } else {
-        moonIcon.style.display = 'block';
-        sunIcon.style.display = 'none';
-    }
+    // Update ambient glow based on current state
+    updateAmbientGlow();
 }
 
-// Restore saved theme
+// Restore saved theme on load
 const savedTheme = localStorage.getItem('theme') || 'dark';
 document.documentElement.setAttribute('data-theme', savedTheme);
-if (savedTheme === 'light') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const moon = document.querySelector('.moon-icon');
-        const sun = document.querySelector('.sun-icon');
-        if (moon) moon.style.display = 'none';
-        if (sun) sun.style.display = 'block';
-    });
+
+/* --- Ambient Glow (adapts to focus state) --- */
+function updateAmbientGlow(focusState) {
+    const glow = document.getElementById('ambient-glow');
+    if (!glow) return;
+
+    const theme = document.documentElement.getAttribute('data-theme');
+    const isDark = theme === 'dark';
+
+    if (focusState === 'FOCUSED') {
+        glow.style.background = isDark
+            ? 'radial-gradient(ellipse 600px 400px at 70% 10%, rgba(52,211,153,0.04), transparent)'
+            : 'radial-gradient(ellipse 600px 400px at 70% 10%, rgba(5,150,105,0.03), transparent)';
+    } else if (focusState === 'DRIFTING') {
+        glow.style.background = isDark
+            ? 'radial-gradient(ellipse 600px 400px at 70% 10%, rgba(251,146,60,0.04), transparent)'
+            : 'radial-gradient(ellipse 600px 400px at 70% 10%, rgba(234,88,12,0.03), transparent)';
+    } else {
+        glow.style.background = isDark
+            ? 'radial-gradient(ellipse 600px 400px at 70% 20%, rgba(59,130,246,0.04), transparent)'
+            : 'radial-gradient(ellipse 600px 400px at 70% 20%, rgba(59,130,246,0.03), transparent)';
+    }
 }
 
 /* --- Helpers --- */
@@ -115,7 +123,7 @@ function renderHistory() {
                         <div class="session-goal">${session.goal}</div>
                         <div class="session-meta">
                             <span class="session-duration">${formatDuration(session.end_ts - session.start_ts)}</span>
-                            <span style="color: var(--border);">/</span>
+                            <span style="color: var(--border);">·</span>
                             <span class="session-drifts">${session.drift_count} drifts</span>
                         </div>
                     </div>
@@ -143,11 +151,14 @@ function viewLive() {
 function renderSessionStats(session) {
     const duration = session.end_ts - session.start_ts;
     const stateClass = `state-${session.final_state.toLowerCase()}`;
-    const stateIcon = session.final_state === 'FOCUSED' ? '●' : '○';
+    const stateIcon = session.final_state === 'FOCUSED' ? '●' : '◌';
+    const cardStatusClass = session.final_state === 'FOCUSED' ? 'card-status-focused' : 'card-status-drifting';
+
+    updateAmbientGlow(session.final_state);
 
     document.getElementById('dashboard').innerHTML = `
         <div class="cards">
-            <div class="card goal-card">
+            <div class="card goal-card ${cardStatusClass}">
                 <div class="card-title">Past Session</div>
                 <div class="goal-text">
                     <span>${session.goal}</span>
@@ -202,10 +213,11 @@ async function loadDashboard() {
         const data = await response.json();
         renderDashboard(data);
     } catch (error) {
+        updateAmbientGlow(null);
         dashboard.innerHTML = `
             <div class="error">
-                Server not running.<br>
-                Run <code style="font-family: 'JetBrains Mono', monospace; background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; margin-left: 4px; border: 1px solid var(--border);">flow-state-server</code> to start.
+                <strong style="font-size: 14px; display: block; margin-bottom: 8px;">Server not running</strong>
+                Run <code style="font-family: 'JetBrains Mono', monospace; background: var(--bg-elevated); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px;">flow-state-server</code> to start the event server.
             </div>
         `;
     }
@@ -213,8 +225,11 @@ async function loadDashboard() {
 
 function renderDashboard(data) {
     const stateClass = `state-${data.focus_state.toLowerCase()}`;
-    const stateIcon = data.focus_state === 'FOCUSED' ? '●' : '○';
+    const stateIcon = data.focus_state === 'FOCUSED' ? '●' : '◌';
     const stateInfo = STATE_INFO[data.focus_state] || 'Unknown';
+    const cardStatusClass = data.focus_state === 'FOCUSED' ? 'card-status-focused' : 'card-status-drifting';
+
+    updateAmbientGlow(data.focus_state);
 
     const relevantPct = Math.round(data.relevant_percent || 0);
     const irrelevantPct = Math.round(data.irrelevant_percent || 0);
@@ -239,7 +254,7 @@ function renderDashboard(data) {
 
     document.getElementById('dashboard').innerHTML = `
         <div class="cards">
-            <div class="card goal-card">
+            <div class="card goal-card ${cardStatusClass}">
                 <div class="card-title">Current Goal</div>
                 <div class="goal-text">
                     <span>${data.goal}</span>
@@ -289,7 +304,7 @@ function renderDashboard(data) {
 
             ${hasBreakdown ? `
             <div class="card" style="grid-column: 1 / -1;">
-                <div class="card-title">Activity</div>
+                <div class="card-title">Activity Breakdown</div>
                 <div>
                     ${breakdownHTML}
                 </div>
