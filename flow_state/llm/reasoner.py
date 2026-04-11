@@ -18,17 +18,17 @@ Then give an overall FOCUSED or DRIFTING state based on time-weighted relevance.
 Rules:
 - FOCUSED: Most time spent on content directly related to the goal
 - DRIFTING: Most time spent on unrelated content
-- Educational content (tutorials, docs, articles) counts as relevant if topic relates to goal
+- **Crucial**: Programming tools, LLM research, documentation (like GeeksforGeeks, StackOverflow, ChatGPT) SHOULD be considered FOCUSED if the goal involves coding, building software, or researching technology.
 - Entertainment (unrelated videos, social media, news) = irrelevant
-- When in doubt about relevance, lean towards irrelevant
+- When in doubt about relevance, lean towards FOCUSED if it looks like technical research.
 
 Return JSON only:
 {{
-  "state": "FOCUSED | DRIFTING",
-  "confidence": 0.0,
+  "state": "FOCUSED" or "DRIFTING",
+  "confidence": <float from 0.0 to 1.0 representing how sure you are, e.g. 0.95>,
   "reason": "brief explanation",
-  "relevant_percent": 0.0,
-  "irrelevant_percent": 0.0
+  "relevant_percent": <float 0-100>,
+  "irrelevant_percent": <float 0-100>
 }}"""
 
     def __init__(self, client: BaseLLMClient):

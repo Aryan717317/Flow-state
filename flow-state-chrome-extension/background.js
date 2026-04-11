@@ -2,13 +2,19 @@ let activeTabId = null;
 let sessionStart = null;
 let interactionBuffer = {};
 let contentBuffer = {};
+let eventsSentCount = 0;
 
 function sendEvent(event) {
   fetch("http://localhost:3333/event", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event)
-  }).catch(() => {});
+  }).then(() => {
+    eventsSentCount++;
+    console.log("[FlowState] Event sent (#" + eventsSentCount + "):", event.type, event.title || "");
+  }).catch(err => {
+    console.warn("[FlowState] Server not reachable:", err.message);
+  });
 }
 
 function endCurrentSession() {
@@ -38,30 +44,31 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
   sessionStart = Date.now();
 });
 
-// Handle messages from content script
-chrome.runtime.onMessage.addListener(msg => {
+// Handle messages from content script AND popup
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "GET_EVENT_COUNT") {
+    sendResponse({ count: eventsSentCount });
+    return true;
+  }
+  
   if (msg.type === "INTERACTION_UPDATE") {
     interactionBuffer[activeTabId] = {
       scroll: msg.scrollCount,
       key: msg.keyCount
     };
     
-    // Store content if provided
     if (msg.content) {
       contentBuffer[activeTabId] = msg.content;
     }
   } else if (msg.type === "URL_CHANGED") {
-    // End current session and start new one for SPA navigation
     endCurrentSession();
     sessionStart = Date.now();
     
-    // Reset interaction counts for new page
     interactionBuffer[activeTabId] = {
       scroll: 0,
       key: 0
     };
     
-    // Store new content
     if (msg.content) {
       contentBuffer[activeTabId] = msg.content;
     }
@@ -82,5 +89,34 @@ chrome.tabs.onRemoved.addListener(tabId => {
     delete contentBuffer[tabId];
     activeTabId = null;
     sessionStart = null;
+  }
+});
+
+// ─── HEARTBEAT: Send a snapshot of the current tab every 10 seconds ───
+setInterval(() => {
+  if (!activeTabId || !sessionStart) return;
+  
+  chrome.tabs.get(activeTabId, tab => {
+    if (chrome.runtime.lastError || !tab) return;
+    
+    sendEvent({
+      type: "PAGE_SESSION",
+      title: tab.title,
+      url: tab.url,
+      content: contentBuffer[activeTabId] || "",
+      durationMs: Date.now() - sessionStart,
+      scrollCount: interactionBuffer[activeTabId]?.scroll || 0,
+      keyCount: interactionBuffer[activeTabId]?.key || 0,
+      timestamp: Date.now()
+    });
+  });
+}, 10000);
+
+// Initialize: capture whatever tab is active on startup
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  if (tabs.length > 0) {
+    activeTabId = tabs[0].id;
+    sessionStart = Date.now();
+    console.log("[FlowState] Extension initialized, tracking tab:", tabs[0].title);
   }
 });

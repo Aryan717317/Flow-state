@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 300px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .header img { width: 28px; height: 28px; border-radius: 6px; }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      margin-left: auto;
+      animation: pulse 2s infinite;
+    }
+    .status-dot.connected { background: #00e676; box-shadow: 0 0 6px #00e676; }
+    .status-dot.disconnected { background: #ff5252; box-shadow: 0 0 6px #ff5252; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 4px; }
+    .value { font-size: 14px; font-weight: 500; word-break: break-all; }
+    .value.green { color: #00e676; }
+    .value.red { color: #ff5252; }
+    .events-count { font-size: 22px; font-weight: 700; color: #64b5f6; }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1e88e5, #1565c0);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="favicon_io/favicon-32x32.png" alt="logo">
+    <h1>Flow State</h1>
+    <div class="status-dot" id="statusDot"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Server Status</div>
+    <div class="value" id="serverStatus">Checking...</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Current Tab</div>
+    <div class="value" id="currentTab">—</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Events Sent This Session</div>
+    <div class="events-count" id="eventCount">—</div>
+  </div>
+
+  <button class="btn" id="dashBtn">Open Dashboard</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

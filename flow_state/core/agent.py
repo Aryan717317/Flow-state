@@ -21,6 +21,12 @@ def build_llm_client(llm_config: dict):
 
     client_class = PROVIDERS.get(provider)
     if not client_class:
+        if provider in PROVIDERS:
+            # The key exists but the class is None (failed import)
+            raise ValueError(
+                f"Provider '{provider}' is configured but missing its library. "
+                f"Please run: pip install {provider}"
+            )
         raise ValueError(f"Unknown provider '{provider}'. Available: {list(PROVIDERS.keys())}")
 
     return client_class(**config)

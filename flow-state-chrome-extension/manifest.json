@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flow State",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Tracks browser activity to help you stay focused on your goals",
   "permissions": ["tabs"],
   "icons": {
@@ -9,6 +9,13 @@
     "32": "favicon_io/favicon-32x32.png",
     "48": "favicon_io/favicon-32x32.png",
     "128": "favicon_io/android-chrome-192x192.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "favicon_io/favicon-16x16.png",
+      "32": "favicon_io/favicon-32x32.png"
+    }
   },
   "background": {
     "service_worker": "background.js"

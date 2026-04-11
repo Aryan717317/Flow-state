@@ -28,25 +28,25 @@ def is_server_running(host="127.0.0.1", port=3333):
 
 
 def start_server_background(host="127.0.0.1", port=3333):
-    """Start the event server in the background."""
-    data_dir = get_data_dir()
+    """Start the event server in a background thread (shares working directory)."""
+    import threading
+    from .tracking.server import EventServer
     
-    # Start server as subprocess
-    process = subprocess.Popen(
-        [sys.executable, "-m", "flow_state.tracking.server"],
-        cwd=str(data_dir),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True
+    server = EventServer(events_file="events.log", host=host, port=port)
+    
+    thread = threading.Thread(
+        target=lambda: server.app.run(host=host, port=port, use_reloader=False),
+        daemon=True
     )
+    thread.start()
     
     # Wait for server to start
     for _ in range(10):
         if is_server_running(host, port):
-            return process
+            return thread
         time.sleep(0.5)
     
-    return process
+    return thread
 
 
 def main():
@@ -122,18 +122,9 @@ def main():
         """Clean up on exit."""
         print("\n\n🛑 Flow State stopped")
         
-        # Kill server if we started it and user didn't request to keep it
-        if server_process and server_was_started and not args.keep_server:
-            try:
-                server_process.terminate()
-                server_process.wait(timeout=2)
-                print("🛑 Event server stopped")
-            except:
-                try:
-                    server_process.kill()
-                    print("🛑 Event server killed")
-                except:
-                    pass
+        # Daemon thread server stops automatically when main process exits
+        if server_was_started and not args.keep_server:
+            print("🛑 Event server stopped")
         
         sys.exit(0)
     
